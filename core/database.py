@@ -1,3 +1,8 @@
+"""SQLite persistence: access-control allowlist, download logs and stats.
+
+Every query is parameterized — never build SQL with f-strings here. One
+connection per call keeps things simple and is plenty at family scale."""
+
 import sqlite3
 
 from config.settings import DB_PATH

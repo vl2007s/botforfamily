@@ -1,3 +1,7 @@
+"""Kinopoisk API client: search by keyword and convert Kinopoisk film/series
+URLs into fbfind watch links. Degrades gracefully to "no results" on any
+error or missing API key — search is a bonus feature, not a hard dependency."""
+
 import logging
 import os
 import re

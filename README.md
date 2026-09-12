@@ -164,6 +164,22 @@ cp .env.example .env
 python main.py
 ```
 
+### Deployment (PM2, survives reboots)
+
+The bot auto-restarts on crashes by itself; PM2 adds boot persistence and supervision:
+
+```bash
+python -m venv venv
+./venv/bin/pip install -r requirements.txt
+
+pm2 start main.py --name botforfamily --interpreter /var/www/botforfamily/venv/bin/python
+pm2 save
+pm2 startup systemd -u root --hp /root   # prints a command — run it once
+```
+
+Updates: `git pull && pm2 restart botforfamily`. Logs: `pm2 logs botforfamily`
+(the app also keeps a rotating `bot.log`, 5 MB × 3 backups).
+
 ---
 
 ## Bot Commands

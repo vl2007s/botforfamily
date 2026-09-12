@@ -1,3 +1,7 @@
+"""BotForFamily entry point: wires settings, database, handlers and starts
+long-polling with a crash-recovery loop (the process is also supervised by
+PM2/systemd in production, so a hard exit is safe)."""
+
 import logging
 import os
 import sys

@@ -1,3 +1,10 @@
+"""yt-dlp wrapper: locates the binary, builds download/search commands and
+post-processes their results.
+
+All commands are argument lists executed without a shell, so user input can
+never break out into shell interpretation. Downloads always land inside a
+tempfile directory created under DOWNLOAD_DIR by the caller."""
+
 import json
 import logging
 import os
@@ -8,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_ytdlp_path() -> str:
+    """Find a working yt-dlp binary: PATH first, then the current venv, then
+    the known production path. Falls back to a bare name and lets the caller
+    surface the error."""
     for path in ['yt-dlp', 'yt-dlp.exe']:
         try:
             subprocess.run([path, '--version'], capture_output=True, check=True)
@@ -36,6 +46,7 @@ YTDLP_PATH = get_ytdlp_path()
 
 
 def search_youtube(query: str, max_results: int = 10):
+    """Search YouTube via yt-dlp; return a list of {id,title,duration,uploader,url}."""
     try:
         cmd = [
             YTDLP_PATH,
@@ -99,6 +110,10 @@ def format_duration(seconds) -> str:
 
 
 def build_video_cmd(url: str, quality: str, output_template: str):
+    """Assemble the yt-dlp argument list for a video download.
+
+    TikTok needs explicit Referer/User-Agent headers to avoid throttling and
+    always uses its single "best" stream (no format merging)."""
     from core.utils import is_tiktok_url
 
     if quality == 'best':
@@ -136,6 +151,7 @@ def build_video_cmd(url: str, quality: str, output_template: str):
 
 
 def build_audio_cmd(url: str, output_template: str):
+    """Assemble the yt-dlp argument list for an MP3 (audio-only) download."""
     from core.utils import is_tiktok_url
 
     cmd = [
@@ -159,10 +175,12 @@ def build_audio_cmd(url: str, output_template: str):
 
 
 def run_yt_dlp(cmd: list, timeout: int = 300):
+    """Run a prepared yt-dlp command, capturing output; callers translate errors."""
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
 
 
 def get_error_message(stderr: str) -> str:
+    """Map raw yt-dlp stderr onto short, actionable Russian user messages."""
     if "Sign in to confirm your age" in stderr:
         return "❌ Ошибка: видео имеет возрастное ограничение."
     elif "Private video" in stderr:
@@ -179,11 +197,19 @@ def get_error_message(stderr: str) -> str:
         return f"❌ Ошибка при скачивании:\n{stderr[:500]}"
 
 
-def find_downloaded_file(tmpdir: str) -> str:
-    files = os.listdir(tmpdir)
-    if not files:
+def find_downloaded_file(tmpdir: str):
+    """Return the largest file yt-dlp produced in `tmpdir`, or None.
+
+    Merging formats can leave intermediate fragments behind; the finished
+    video/audio is reliably the largest file, so size beats order."""
+    candidates = [
+        os.path.join(tmpdir, name)
+        for name in os.listdir(tmpdir)
+        if os.path.isfile(os.path.join(tmpdir, name))
+    ]
+    if not candidates:
         return None
-    return os.path.join(tmpdir, files[0])
+    return max(candidates, key=os.path.getsize)
 
 
 def check_file_size(file_path: str, max_size_mb: int) -> bool:

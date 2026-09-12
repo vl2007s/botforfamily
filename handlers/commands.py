@@ -1,3 +1,11 @@
+"""Telegram handlers: commands, inline keyboards, search flows and downloads.
+
+User-facing strings intentionally stay in Russian (the bot's audience is the
+author's family); docstrings and comments are English for maintainers.
+
+Conversation state between callbacks lives in `context.user_data` — PTB gives
+each chat its own dict, so keys like 'url' / 'search_results' are per-user."""
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from core.database import is_user_allowed, log_download, get_download_logs, get_user_download_logs
@@ -12,13 +20,15 @@ import tempfile
 import os
 import subprocess
 import logging
+from logging.handlers import RotatingFileHandler
 
-# Настройка логирования
+# File + console logging. The file rotates at 5 MB (keeps 3 backups) — a plain
+# FileHandler let bot.log grow past 30 MB on the production server.
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('bot.log', encoding='utf-8'),
+        RotatingFileHandler('bot.log', maxBytes=5 * 1024 * 1024, backupCount=3, encoding='utf-8'),
         logging.StreamHandler()
     ]
 )

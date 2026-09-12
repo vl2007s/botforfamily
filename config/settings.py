@@ -1,3 +1,9 @@
+"""Central configuration, loaded once at import time.
+
+Secrets come exclusively from the environment (.env via python-dotenv) —
+nothing sensitive is hardcoded, and .env is gitignored. Missing required
+values fail fast at startup instead of half-configured."""
+
 import os
 
 from dotenv import load_dotenv
