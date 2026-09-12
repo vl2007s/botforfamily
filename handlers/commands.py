@@ -742,9 +742,9 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if not search_query:
                 await query.edit_message_text("❌ Ошибка: запрос не найден.")
                 return
-            # handle_search вызывает update.message.reply_text, но у нас callback_query
-            # Отправляем новое сообщение через effective_chat
-            await update.effective_chat.send_message(
+            # edit the menu message into the "searching..." stub so the flow
+            # stays in ONE message (show_search_results edits it again below)
+            await query.edit_message_text(
                 f"🔍 Ищу «{search_query}» на YouTube...\n"
                 f"⏳ Это займёт секунду..."
             )
