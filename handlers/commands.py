@@ -260,14 +260,16 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    text = "📋 *Список пользователей:*\n\n"
+    text = "📋 Список пользователей:\n\n"
     for uid, username, first_name, added_at in users:
         name = first_name or username or "Без имени"
-        text += f"• `{uid}` — {name}\n"
-    
+        # plain text on purpose: names are user-controlled and would break
+        # (or inject into) Markdown formatting
+        text += f"• {uid} — {name}\n"
+
     text += f"\n👥 Всего: {len(users)} пользователей"
-    
-    await update.message.reply_text(text, parse_mode='Markdown')
+
+    await update.message.reply_text(text)
 
 
 async def logs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -297,9 +299,9 @@ async def logs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         log_id, uid, username, first_name, url, platform, dl_type, quality, status, error, created_at = log
         name = first_name or username or f"ID:{uid}"
         status_emoji = "✅" if status == "success" else "❌"
-        
-        # Обрезаем URL
-        short_url = url
+
+        # keep the message well under Telegram's 4096-char limit
+        short_url = url if len(url) <= 80 else url[:77] + "..."
         
         text += (
             f"{status_emoji} *{name}*\n"

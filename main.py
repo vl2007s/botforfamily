@@ -1,11 +1,15 @@
 """BotForFamily entry point: wires settings, database, handlers and starts
-long-polling with a crash-recovery loop (the process is also supervised by
-PM2/systemd in production, so a hard exit is safe)."""
+long-polling.
+
+Crash strategy: NO in-process restart loop. python-telegram-bot's Application
+cannot be safely re-run after an exception without a full shutdown — retrying
+on the same instance breaks on event-loop-bound HTTP clients. Instead the
+process exits on a crash and PM2/systemd (see README Deployment) restarts it
+with a clean state. `stop_signals` stays default so PM2's shutdown is clean."""
 
 import logging
 import os
 import sys
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -76,17 +80,9 @@ def main():
 
     logger.info("Bot started! Press Ctrl+C to stop.")
 
-    while True:
-        try:
-            application.run_polling(
-                allowed_updates=Update.ALL_TYPES,
-                stop_signals=None,
-                close_loop=False
-            )
-        except Exception as e:
-            logger.error(f"Bot crashed with error: {e}. Restarting in 10 seconds...")
-            time.sleep(10)
-            continue
+    # Single run: on an unrecoverable error the process exits and the process
+    # manager (PM2/systemd) brings it back up with fresh state.
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":

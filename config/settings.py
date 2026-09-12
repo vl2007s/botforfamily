@@ -8,7 +8,10 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Resolve .env relative to the project root, not the current working
+# directory — the bot must start the same way manually, under PM2, or systemd.
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
@@ -20,7 +23,6 @@ if not ADMIN_ID:
 
 KINOPOISK_API_KEY = os.getenv("KINOPOISK_API_KEY", "")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
 DB_PATH = os.path.join(BASE_DIR, "users.db")
 
