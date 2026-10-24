@@ -1,0 +1,16 @@
+.git
+.gitignore
+.github
+venv
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.example
+bot.log
+bot.log.*
+downloads
+users.db
+*.md
+LICENSE
+SECURITY.md

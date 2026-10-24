@@ -23,7 +23,8 @@ if not ADMIN_ID:
 
 KINOPOISK_API_KEY = os.getenv("KINOPOISK_API_KEY", "")
 
-DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
-DB_PATH = os.path.join(BASE_DIR, "users.db")
+DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", os.path.join(BASE_DIR, "downloads"))
+DB_PATH = os.getenv("DB_PATH", os.path.join(BASE_DIR, "users.db"))
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
